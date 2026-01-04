@@ -12,15 +12,16 @@ from app.models.condominio import Condominio
 from app.schemas.obra import ObraCreate, ObraStatusUpdate
 from app.schemas.historico_status import HistoricoStatusOut
 from app.schemas.condominio import CondominioCreate, CondominioOut
-
 app = FastAPI()
 
 from app.database import engine, Base
 
+# 🔴 IMPORTANTE: importar os models para registrar no Base
+from app.models import condominio, obra, historico_status  # noqa
+
 @app.on_event("startup")
 def startup_event():
     Base.metadata.create_all(bind=engine)
-
 # CORS (Liberado para integração com frontend no Vercel e testes locais)
 app.add_middleware(
     CORSMiddleware,
