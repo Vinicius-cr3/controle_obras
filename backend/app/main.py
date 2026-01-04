@@ -13,23 +13,16 @@ from app.schemas.obra import ObraCreate, ObraStatusUpdate
 from app.schemas.historico_status import HistoricoStatusOut
 from app.schemas.condominio import CondominioCreate, CondominioOut
 
-
 app = FastAPI()
 
-# CORS (FRONT VITE DEV + PREVIEW)
+# CORS (liberado para integração com frontend no Vercel e testes locais)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 transicoes_permitidas = {
     "CADASTRADA": ["EM_ANALISE"],
@@ -39,11 +32,9 @@ transicoes_permitidas = {
     "CONCLUIDA": [],
 }
 
-
 @app.get("/")
 def root():
     return {"mensagem": "API de Controle de Obras rodando"}
-
 
 # -------- Condominios --------
 
@@ -55,11 +46,9 @@ def criar_condominio(dados: CondominioCreate, db: Session = Depends(get_db)):
     db.refresh(condominio)
     return condominio
 
-
 @app.get("/condominios", response_model=List[CondominioOut])
 def listar_condominios(db: Session = Depends(get_db)):
     return db.query(Condominio).order_by(Condominio.id).all()
-
 
 # -------- Obras --------
 
@@ -73,22 +62,16 @@ def criar_obra(obra: ObraCreate, db: Session = Depends(get_db)):
     nova_obra = Obra(
         titulo=obra.titulo,
         descricao=obra.descricao,
-        condominio_id=obra.condominio_id
+        condominio_id=obra.condominio_id,
     )
     db.add(nova_obra)
     db.commit()
     db.refresh(nova_obra)
     return nova_obra
 
-
 @app.get("/obras")
 def listar_obras(condominio_id: int, db: Session = Depends(get_db)):
-    return (
-        db.query(Obra)
-        .filter(Obra.condominio_id == condominio_id)
-        .all()
-    )
-
+    return db.query(Obra).filter(Obra.condominio_id == condominio_id).all()
 
 @app.patch("/obras/{obra_id}/status")
 def atualizar_status(obra_id: int, dados: ObraStatusUpdate, db: Session = Depends(get_db)):
@@ -99,7 +82,7 @@ def atualizar_status(obra_id: int, dados: ObraStatusUpdate, db: Session = Depend
     if dados.status not in transicoes_permitidas.get(obra.status, []):
         raise HTTPException(
             status_code=400,
-            detail=f"Transição inválida de {obra.status} para {dados.status}"
+            detail=f"Transição inválida de {obra.status} para {dados.status}",
         )
 
     status_anterior = obra.status
@@ -108,14 +91,13 @@ def atualizar_status(obra_id: int, dados: ObraStatusUpdate, db: Session = Depend
     historico = HistoricoStatus(
         obra_id=obra.id,
         status_anterior=status_anterior,
-        novo_status=dados.status
+        novo_status=dados.status,
     )
     db.add(historico)
 
     db.commit()
     db.refresh(obra)
     return obra
-
 
 @app.get("/obras/{obra_id}/historico", response_model=List[HistoricoStatusOut])
 def listar_historico(obra_id: int, db: Session = Depends(get_db)):
