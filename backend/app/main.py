@@ -15,6 +15,12 @@ from app.schemas.condominio import CondominioCreate, CondominioOut
 
 app = FastAPI()
 
+from app.database import engine, Base
+
+@app.on_event("startup")
+def startup_event():
+    Base.metadata.create_all(bind=engine)
+
 # CORS (Liberado para integração com frontend no Vercel e testes locais)
 app.add_middleware(
     CORSMiddleware,
