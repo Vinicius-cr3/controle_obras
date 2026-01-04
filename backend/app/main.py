@@ -15,10 +15,14 @@ from app.schemas.condominio import CondominioCreate, CondominioOut
 
 app = FastAPI()
 
-# CORS (liberado para integração com frontend no Vercel e testes locais)
+# CORS (Liberado para integração com frontend no Vercel e testes locais)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://controle-obras-seven.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
